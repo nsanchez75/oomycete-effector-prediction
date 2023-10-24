@@ -1,9 +1,8 @@
-import numpy as np
-import FEAT as FEAT
+import FEAT
 import sys, warnings
-import pandas as pd
 import numpy as np
-import pickle
+import pandas as pd
+import joblib
 from Bio import SeqIO
 
 ## take in: 
@@ -17,8 +16,12 @@ from Bio import SeqIO
 ##    1) csv of IDs|class_prediction|meaning|probability_of_prediction
 ##    2) fasta file of predicted effectors
 
+if len(sys.argv) < 2:
+    exit("Error: run script as ")
+
 FASTA_FILE = sys.argv[1]
 
+# import trained model
 if len(sys.argv) < 3:
     MODEL_FILE = "../trained_models/RF_88_best.sav"
 else:
@@ -27,7 +30,7 @@ else:
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     
-trained_model = pickle.load(open(MODEL_FILE, 'rb'))
+trained_model = joblib.load(open(MODEL_FILE, 'rb'))
 seqs_to_predict = SeqIO.parse(open(FASTA_FILE),'fasta')
 prediction_map = {'0': "predicted_non-effector", '1': "predicted_effector"}
 
