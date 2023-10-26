@@ -36,6 +36,7 @@ Update 10/26/2023:
 - removed function create_histogram because histograms of probabilities and sequence lengths have different parameters
 - implemented option to input a file that lists sequence names a user would want to focus on in their inputted FASTA file
 - made it so the probabilities histogram uses domain from [0.0 - 1.0]
+- R script creates new directory if dealing with a list of sequence names to filter (all produced files will go into the newly made directory)
 
 ### Analyzing Effector Probability on Confirmed Effectors & Non-Effectors
 
