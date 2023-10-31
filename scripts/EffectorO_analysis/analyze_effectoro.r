@@ -90,15 +90,14 @@ if (filter_list_check) {
   filter_list <- readLines(opt$filter_list)
 
   # create directory for filter list file
-  filter_list_dirname <- gsub("[.][a-z,A-Z,0-9]+", '', opt$filter_list)
-  filter_list_dirname <- paste(filter_list_dirname, "_analysis_results", sep='')
-  dir.create(filter_list_dirname)
+  filter_list_filename <- gsub("[.][a-z,A-Z,0-9]+", '', opt$filter_list)
+  filter_list_filename <- paste(filter_list_filename, "_analysis_results", sep='')
+  dir.create(filter_list_filename)
   # switch to new directory for all outputs
-  setwd(filter_list_dirname)
+  setwd(filter_list_filename)
 }
 
 # init vectors
-found_filter_names <- c()
 probabilities <- c()
 length_of_seqs <- c()
 filter_list_lines <- c()
@@ -107,8 +106,8 @@ for (line in seq(1, length(fasta_file), by=2)) {
   seq_header <- unlist(strsplit(fasta_file[line], " "))
   seq_name <- sub('>', '', seq_header[1])
   if (!filter_list_check || is_seq_in_filter_list(seq_name, filter_list)) {
-    # list name found
-    found_filter_names <- c(found_filter_names, seq_name)
+    # remove found name from list
+    filter_list <- filter_list[filter_list != seq_name]
 
     # extract probability values from headers
     probability_val <- as.numeric(unlist(strsplit(seq_header[3], "="))[2])
@@ -123,21 +122,26 @@ for (line in seq(1, length(fasta_file), by=2)) {
 
 # warn user if some filter names were not found in the file
 if (filter_list_check) {
-  filter_names_not_found <- filter_list[!found_filter_names %in% filter_list]
-  if (length(filter_names_not_found) > 0)
-    for (name in filter_names_not_found)
-      print(paste("Warning:", name, "was not found in the input FASTA file. Make sure this sequence is pasted into the FASTA file."))
+  warning_file <- file(paste(filter_list_filename, "_warnings.log", sep=''), 'w')
+  warnings_list <- c()
+  if (length(filter_list) > 0) {
+    warnings_list <- c(warnings_list, "Warning: these sequence names are not found in the input FASTA file:")
+    for (name in filter_list)
+      warnings_list <- c(warnings_list, paste('\t', name, sep=''))
+  }
+
+  for (line in warnings_list)
+    print(sub("\\t", '', line))
+
+  writeLines(warnings_list, warning_file)
+  close(warning_file)
 }
 
 
 # create histograms
-# create_histogram("effector_probabilities_hist.png", probabilities,
-#                  "Histogram of Effector Probabilities", "Probability", 22)
 png("effector_probabilities_hist.png", width=800, height=400)
 hist(probabilities, main="Histogram of Effector Probabilities", xlab="Probability", xlim=c(0.0,1.0), ylab="Frequency")
 dev.off()
-# create_histogram("length_of_seqs_hist.png", length_of_seqs,
-#                  "Histogram of Sequence Lengths", "Sequence Length", 20)
 png("length_of_seqs_hist.png", width=800, height=400)
 hist(length_of_seqs, main="length_of_seqs_hist.png", xlab="Sequence Lengths", ylab="Frequency", breaks=20)
 dev.off()
@@ -150,7 +154,7 @@ create_freq_files(length_of_seqs, "length_of_seqs_frequencies.txt")
 
 # create subfile of FASTA file consisting of filter list names
 if (filter_list_check)
-  writeLines(filter_list_lines, paste(filter_list_dirname, "_predicted_effectors.fasta", sep=''))
+  writeLines(filter_list_lines, paste(filter_list_filename, "_predicted_effectors.fasta", sep=''))
 
 
 # create file consisting of only sequences within cutoff parameters

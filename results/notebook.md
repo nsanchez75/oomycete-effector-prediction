@@ -38,6 +38,10 @@ Update 10/26/2023:
 - made it so the probabilities histogram uses domain from [0.0 - 1.0]
 - R script creates new directory if dealing with a list of sequence names to filter (all produced files will go into the newly made directory)
 
+Update 10/27/2023:
+
+- updated analysis_effector.r to log any sequence names not found in the input FASTA file
+
 ### Analyzing Effector Probability on Confirmed Effectors & Non-Effectors
 
 Downloading datasets from Munir's directory on 10/25/2023. So far me and Kelsey have only found WY and CRN files displaying what sequences are classified as each.
@@ -57,3 +61,5 @@ Datasets:
   - TODO: figure this part out later
 
 Update 10/26/2023: I analyzed WY and CRN with my revamped R script. I found that all of the sequences indicated by the filter list files can be found in the EffectorO-produced FASTA file. However, I don't notice any correlation between the fact that they are known effectors and their probabilities.
+
+Update 10/30/2023: I fixed the R script to properly log what sequences from the filter list were not found in the input FASTA file. I found that there were some sequences from the known effectors lists that were not found. Thus, I need to talk to Kelsey about the effectiveness of EffectorO.
