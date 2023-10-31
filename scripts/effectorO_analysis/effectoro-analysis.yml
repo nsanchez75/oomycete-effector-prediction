@@ -1,0 +1,6 @@
+name: effectoro-analysis
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.1
+  - r-optparse
