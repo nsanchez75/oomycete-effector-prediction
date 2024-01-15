@@ -1,4 +1,4 @@
-import dash
+from dash import Dash
 import dash_table
 from dash.dependencies import Input, Output, State
 import dash_html_components as html
@@ -21,7 +21,7 @@ import app_components.callback_functions as callback_functions
 
 # Set up the app
 external_stylesheets = [dbc.themes.BOOTSTRAP, "assets/object_properties_style.css"]
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
+app = Dash(__name__, external_stylesheets=external_stylesheets, suppress_callback_exceptions=True)
 server = app.server
 
 # set up ML model
@@ -152,110 +152,114 @@ def get_new_datatable(contents, filename):
 	return parse_contents(contents, filename).to_html()
 
 # Buttons
-button_howto = dbc.Button(
-	"View code on GitHub",
-	outline=False,
-	color="primary",
-	href="https://github.com/mjnur/oomycete-effector-prediction",
-	id="gh-link",
-	style={"text-transform": "none"},
-)
+# button_howto = dbc.Button(
+# 	"View code on GitHub",
+# 	outline=False,
+# 	color="primary",
+# 	href="https://github.com/mjnur/oomycete-effector-prediction",
+# 	id="gh-link",
+# 	style={"text-transform": "none"},
+# )
 
 # Define Header Layout
-header = dbc.Navbar(
-	dbc.Container([
-		dbc.Row(
-			[
-				dbc.Col(html.A(
-						html.Img(
-							src=app.get_asset_url("genomecenter_logo.png"),
-							height="30px",
-						),
-						href="https://bremia.ucdavis.edu",
-				)),
-				dbc.Col(dbc.NavbarBrand("EffectorO: Motif-Independent Oomycete Effector Prediction")),
-			],
-			align="center",
-		),
+header = html_content.create_title_navbar(app)
+# header = dbc.Navbar(
+# 	dbc.Container([
+# 		dbc.Row(
+# 			[
+# 				dbc.Col(html.A(
+# 						html.Img(
+# 							src=app.get_asset_url("genomecenter_logo.png"),
+# 							height="30px",
+# 						),
+# 						href="https://bremia.ucdavis.edu",
+# 				)),
+# 				dbc.Col(dbc.NavbarBrand("EffectorO: Motif-Independent Oomycete Effector Prediction")),
+# 			],
+# 			align="center",
+# 		),
 
-		dbc.Row(
-			dbc.Col([
-					dbc.NavbarToggler(id="navbar-toggler"),
-					dbc.Collapse(
-						dbc.Nav(
-							[dbc.NavItem(button_howto)],
-							className="ml-auto",
-							navbar=True,
-						),
-						id="navbar-collapse",
-						navbar=True,
-					)
-			]),
-			align="center",
-		),
-	],
-	fluid=True,
-	),
-	color="dark",
-	dark=True,
-)
+# 		dbc.Row(
+# 			dbc.Col([
+# 					dbc.NavbarToggler(id="navbar-toggler"),
+# 					dbc.Collapse(
+# 						dbc.Nav(
+# 							[dbc.NavItem(button_howto)],
+# 							className="ml-auto",
+# 							navbar=True,
+# 						),
+# 						id="navbar-collapse",
+# 						navbar=True,
+# 					)
+# 			]),
+# 			align="center",
+# 		),
+# 	],
+# 	fluid=True,
+# 	),
+# 	color="dark",
+# 	dark=True,
+# )
 
 # Define Cards
-fasta_input_card = dbc.Card(
-	[
-		dbc.CardHeader(html.H3("Input FASTA protein file for EffectorO-ML")),
-		dbc.CardBody(
-			dbc.Row([
-				dbc.Col([
-					# create upload button, with max file size of 10MB
-					dcc.Upload(html.Button('Select a fasta file',
-																	style={'width': "100%",
-																				 'borderStyle': 'dashed',
-																				 'font-family': 'sans-serif',
-																				 'borderRadius': '5px',
-																				 'borderWidth': '2px',}),
-											id="upload-data",
-											max_size=20000000,
-											style={"width": "100%"}),
-				], width=12, style={"padding-left": 0}),
-				html.Div([
-					dcc.Markdown('''**File requirements**:''', style={'padding-top': '10px'}),
-					dcc.Markdown('''
-											 - FASTA-formatted file of predicted amino acid sequences
-											 - File size less than 20MB
-											 ''')
-				]),
-			]),
-		),
-	],
-	style={'height': '100%'}
-)
-
-table_card = dbc.Card([
-		dbc.CardHeader(html.H2("EffectorO-ML Prediction Table")),
-		dbc.CardBody(dbc.Row(dbc.Col([html.Div(id='datatable')]))),
-])
+fasta_input_card = html_content.create_fasta_input_card(10000000)
+# fasta_input_card = dbc.Card(
+# 	[
+# 		dbc.CardHeader(html.H3("Input FASTA protein file for EffectorO-ML")),
+# 		dbc.CardBody(
+# 			dbc.Row([
+# 				dbc.Col([
+# 					# create upload button, with max file size of 10MB
+# 					dcc.Upload(html.Button('Select a fasta file',
+# 																	style={'width': "100%",
+# 																				 'borderStyle': 'dashed',
+# 																				 'font-family': 'sans-serif',
+# 																				 'borderRadius': '5px',
+# 																				 'borderWidth': '2px',}),
+# 										 id="upload-data",
+# 										 max_size=20000000,
+# 										 style={"width": "100%"}),
+# 				], width=12, style={"padding-left": 0}),
+# 				html.Div([
+# 					dcc.Markdown('''**File requirements**:''', style={'padding-top': '10px'}),
+# 					dcc.Markdown('''
+# 											 - FASTA-formatted file of predicted amino acid sequences
+# 											 - File size less than 20MB
+# 											 ''')
+# 				]),
+# 			]),
+# 		),
+# 	],
+# 	style={'height': '100%'}
+# )
 
 tab_label_style={"font-size": "1.3rem"}
 
-info_card = dbc.Card(
-	[
-		dbc.CardHeader(
-			dbc.Tabs(
-				[
-					dbc.Tab(label="Launch Instructions", tab_id="launch-tab",
-									label_style=tab_label_style),
-					dbc.Tab(label="Methodology", tab_id="method-tab",
-									label_style=tab_label_style),
-				],
-				id="card-tabs",
-				card=True,
-				active_tab="launch-tab",
-			)
-		),
-		dbc.CardBody(html.P(id="card-content", className="card-text")),
-	], style={'height': '100%'}
-)
+info_card = html_content.create_info_card()
+# info_card = dbc.Card(
+# 	[
+# 		dbc.CardHeader(
+# 			dbc.Tabs(
+# 				[
+# 					dbc.Tab(label="Launch Instructions", tab_id="launch-tab",
+# 									label_style=tab_label_style),
+# 					dbc.Tab(label="Methodology", tab_id="method-tab",
+# 									label_style=tab_label_style),
+# 				],
+# 				id="info-card-tabs",
+# 				card=True,
+# 				active_tab="launch-tab",
+# 			)
+# 		),
+# 		dbc.CardBody(html.P(id="card-content", className="card-text")),
+# 	], style={'height': '100%'}
+# )
+
+# table_card = dbc.Card([
+# 		dbc.CardHeader(html.H2("EffectorO-ML Prediction Table")),
+# 		dbc.CardBody(dbc.Row(dbc.Col([html.Div(id='datatable')]))),
+# ])
+table_card = html_content.create_table_card()
 
 @app.callback(
     Output('memory-usage', 'children'),
@@ -267,7 +271,7 @@ def update_memory_usage():
 
 @app.callback(
     Output("card-content", "children"),
-		[Input("card-tabs", "active_tab")]
+		[Input("info-card-tabs", "active_tab")]
 )
 def tab_content(active_tab):
 	if active_tab == "method-tab":
