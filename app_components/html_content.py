@@ -1,4 +1,4 @@
-from dash_core_components import Markdown, Interval, Upload
+from dash_core_components import Markdown, Upload
 from dash_html_components import (
   Div, H3, P, A,
   Button as html_Button, Img
@@ -15,8 +15,6 @@ from dash import Dash
 
 
 def create_app_skeleton(header: str, fasta_input_card: Card, info_card: Card, table_card: Card):
-  
-  
   return (
     Div(
       [
