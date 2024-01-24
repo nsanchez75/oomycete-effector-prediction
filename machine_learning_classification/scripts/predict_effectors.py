@@ -1,9 +1,8 @@
-import numpy as np
-import FEAT as FEAT
+import FEAT
 import sys, warnings
-import pandas as pd
 import numpy as np
-import pickle
+import pandas as pd
+import joblib
 from Bio import SeqIO
 
 ## take in: 
@@ -17,8 +16,12 @@ from Bio import SeqIO
 ##    1) csv of IDs|class_prediction|meaning|probability_of_prediction
 ##    2) fasta file of predicted effectors
 
+if len(sys.argv) < 2:
+    exit("Error: run script as ")
+
 FASTA_FILE = sys.argv[1]
 
+# import trained model
 if len(sys.argv) < 3:
     MODEL_FILE = "../trained_models/RF_88_best.sav"
 else:
@@ -27,9 +30,45 @@ else:
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
     
-trained_model = pickle.load(open(MODEL_FILE, 'rb'))
+trained_model = joblib.load(open(MODEL_FILE, 'rb'))
 seqs_to_predict = SeqIO.parse(open(FASTA_FILE),'fasta')
 prediction_map = {'0': "predicted_non-effector", '1': "predicted_effector"}
+
+
+def get_average_features(sequence, df=0, protID=0):
+	'''
+	Method: Fills feature columns in a dataframe with net averages
+
+	Input:
+
+		- sequence: amino acid string
+		- df: dataframe
+		- protID: sequence identifier
+	'''
+
+	# get net cumulative sums
+	#print("calculating for", sequence)
+	length = min(len(sequence), 900)
+
+	gravy = hydrophobicity = exposed = disorder = bulkiness = interface = 0.0
+	for ind, aa in enumerate(sequence):
+		if ind == length: break
+
+		if aa.upper() in FEAT.INTERFACE_DIC:
+			gravy += FEAT.GRAVY_DIC[aa.upper()]
+			hydrophobicity += FEAT.HYDRO_DIC[aa.upper()]
+			exposed += FEAT.EXPOSED_DIC[aa.upper()]
+			disorder += FEAT.DISORDER_DIC[aa.upper()]
+			bulkiness += FEAT.BULKY_DIC[aa.upper()]
+			interface += FEAT.INTERFACE_DIC[aa.upper()]
+
+	# return averages
+	return [gravy           / length,
+			hydrophobicity 	/ length,
+			exposed 		/ length,
+			disorder 		/ length,
+			bulkiness 		/ length,
+			interface 		/ length]
 
     
 def main():
@@ -79,63 +118,27 @@ effector classifier on: ", len(seq_features))
     resultDF.to_csv("effector_classification_table.csv")
     
     # write effectors
-    outfile = open("predicted_effectors.fasta", 'w')
-    effectors = resultDF[resultDF['meaning'] == "predicted_effector"]
+    with open("predicted_effectors.fasta", 'w') as outfile:
+        effectors = resultDF[resultDF['meaning'] == "predicted_effector"]
 
-    ids_to_write = effectors["proteinID"] + ' ' \
-                    + effectors["meaning"] + ' ' \
-                    + "probability=" \
-                    + effectors["probability"].astype(str)
-    
-    ids_to_write = ids_to_write.tolist()
-    effector_seqs = effectors['sequence'].tolist()
-    
-    for idx, cur_id in enumerate(ids_to_write):
-        if idx != 0: outfile.write("\n")
-        outfile.write(">" + cur_id + " \n")
-        outfile.write(effector_seqs[idx])
+        ids_to_write = effectors["proteinID"] + ' ' \
+                        + effectors["meaning"] + ' ' \
+                        + "probability=" \
+                        + effectors["probability"].astype(str)
+        
+        ids_to_write = ids_to_write.tolist()
+        effector_seqs = effectors['sequence'].tolist()
+        
+        for idx, cur_id in enumerate(ids_to_write):
+            if idx != 0: outfile.write("\n")
+            outfile.write(">" + cur_id + " \n")
+            outfile.write(effector_seqs[idx])
         
     print("\nOutput fasta of predicted effectors available in: \n \
-            predicted_effectors.fasta\n")
+             predicted_effectors.fasta\n")
     print("Detailed CSV with fasta IDs | sequences | predictions | probabilities in: \n \
-            effector_classification_table.csv\n")
-        
-def get_average_features(sequence, df=0, protID=0):
-    '''
-    Method: Fills feature columns in df with net averages
-    Input: 
-        - df: dataframe
-        - protID: sequence identifier
-        - sequence: amino acid string
-    '''
-    res = []
-    gravy = hydrophobicity = exposed = disorder = bulkiness = interface = 0.0
-    
-    ## get NET cumulative sums
-    #print("calculating for", sequence)
-    length = min(len(sequence), 900)
-    
-    for ind,aa in enumerate(sequence):
-        if ind == length: 
-            break
-            
-        if aa.upper() in FEAT.INTERFACE_DIC:
-            gravy += FEAT.GRAVY_DIC[aa.upper()]
-            hydrophobicity += FEAT.HYDRO_DIC[aa.upper()]
-            exposed += FEAT.EXPOSED_DIC[aa.upper()]
-            disorder += FEAT.DISORDER_DIC[aa.upper()]
-            bulkiness += FEAT.BULKY_DIC[aa.upper()]
-            interface += FEAT.INTERFACE_DIC[aa.upper()]
+           effector_classification_table.csv\n")
 
-    ## store averages in df_
-    res.append(gravy / length)
-    res.append(hydrophobicity / length)
-    res.append(exposed / length)
-    res.append(disorder / length)
-    res.append(bulkiness / length)
-    res.append(interface / length)
-    
-    return res
 
 if __name__ == "__main__":
     main()
